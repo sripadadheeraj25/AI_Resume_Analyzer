@@ -30,12 +30,15 @@
 
     <!-- Navbar -->
     <nav class="navbar navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'home' %}">
-                <i class="bi bi-file-earmark-person"></i> Resume Analyzer
-            </a>
-        </div>
-    </nav>
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'home' %}">
+            <i class="bi bi-file-earmark-person"></i> Resume Analyzer
+        </a>
+        <a href="{% url 'history' %}" class="btn btn-outline-light btn-sm">
+            <i class="bi bi-clock-history"></i> History
+        </a>
+    </div>
+</nav>
 
     <!-- Flash messages — shows errors from views.py messages.error() -->
     <div class="container mt-3">
