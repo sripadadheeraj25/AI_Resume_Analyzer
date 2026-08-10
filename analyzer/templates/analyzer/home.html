@@ -1,0 +1,72 @@
+{% extends 'analyzer/base.html' %}
+
+{% block title %}Upload Resume — AI Resume Analyzer{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+
+        <!-- Page heading -->
+        <div class="text-center mb-4">
+            <h1 class="fw-bold">AI Resume Analyzer</h1>
+            <p class="text-muted">Upload your resume and paste a job description to get an instant match score and improvement tips.</p>
+        </div>
+
+        <!-- Upload form card -->
+        <div class="card p-4">
+            <form method="POST" action="{% url 'analyze' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- Resume upload field -->
+                <div class="mb-4">
+                    <label for="resume_file" class="form-label fw-semibold">
+                        <i class="bi bi-file-earmark-pdf text-danger"></i> Upload Resume (PDF only)
+                    </label>
+                    <input type="file"
+                           class="form-control"
+                           id="resume_file"
+                           name="resume_file"
+                           accept=".pdf"
+                           required>
+                    <div class="form-text">Maximum file size: 5MB</div>
+                </div>
+
+                <!-- Job description field -->
+                <div class="mb-4">
+                    <label for="job_description" class="form-label fw-semibold">
+                        <i class="bi bi-briefcase text-primary"></i> Paste Job Description
+                    </label>
+                    <textarea class="form-control"
+                              id="job_description"
+                              name="job_description"
+                              rows="10"
+                              placeholder="Paste the full job description here..."
+                              required></textarea>
+                    <div class="form-text">The more detailed the job description, the better the analysis.</div>
+                </div>
+
+                <!-- Submit button -->
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                        <i class="bi bi-cpu"></i> Analyze Resume
+                    </button>
+                </div>
+
+            </form>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Show loading state when form is submitted
+    // Gemini API takes 5-15 seconds — this prevents user from thinking nothing happened
+    document.querySelector('form').addEventListener('submit', function() {
+        const btn = document.getElementById('submitBtn');
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Analyzing... please wait';
+        btn.disabled = true;
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,157 @@
+{% extends 'analyzer/base.html' %}
+
+{% block title %}Analysis Result — AI Resume Analyzer{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+
+        <!-- Page heading -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0">Analysis Result</h2>
+            <a href="{% url 'home' %}" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-left"></i> Analyze Another
+            </a>
+        </div>
+
+        <!-- Score cards row -->
+        <div class="row mb-4">
+
+            <!-- Match score card -->
+            <div class="col-md-6 mb-3">
+                <div class="card p-4 text-center h-100">
+                    <h5 class="text-muted mb-3">Resume Match Score</h5>
+                    <canvas id="matchChart" width="200" height="200" style="max-width:200px; margin:0 auto;"></canvas>
+                    <div class="mt-3">
+                        <span class="fs-1 fw-bold
+                            {% if analysis.match_score >= 70 %}text-success
+                            {% elif analysis.match_score >= 40 %}text-warning
+                            {% else %}text-danger{% endif %}">
+                            {{ analysis.match_score }}%
+                        </span>
+                        <p class="text-muted mb-0">
+                            {% if analysis.match_score >= 70 %}Strong Match
+                            {% elif analysis.match_score >= 40 %}Moderate Match
+                            {% else %}Weak Match{% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ATS score card -->
+            <div class="col-md-6 mb-3">
+                <div class="card p-4 text-center h-100">
+                    <h5 class="text-muted mb-3">ATS Friendliness Score</h5>
+                    <canvas id="atsChart" width="200" height="200" style="max-width:200px; margin:0 auto;"></canvas>
+                    <div class="mt-3">
+                        <span class="fs-1 fw-bold
+                            {% if analysis.ats_score >= 70 %}text-success
+                            {% elif analysis.ats_score >= 40 %}text-warning
+                            {% else %}text-danger{% endif %}">
+                            {{ analysis.ats_score }}%
+                        </span>
+                        <p class="text-muted mb-0">
+                            {% if analysis.ats_score >= 70 %}ATS Friendly
+                            {% elif analysis.ats_score >= 40 %}Needs Improvement
+                            {% else %}Not ATS Friendly{% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Skills row -->
+        <div class="row mb-4">
+
+            <!-- Matched skills -->
+            <div class="col-md-6 mb-3">
+                <div class="card p-4 h-100">
+                    <h5 class="fw-semibold mb-3">
+                        <i class="bi bi-check-circle-fill text-success"></i> Matched Skills
+                    </h5>
+                    <div>
+                        {% for skill in matched_skills %}
+                            <span class="badge bg-success me-1 mb-2 fs-6 fw-normal p-2">
+                                {{ skill.skill_name }}
+                            </span>
+                        {% empty %}
+                            <p class="text-muted">No matching skills found.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Missing skills -->
+            <div class="col-md-6 mb-3">
+                <div class="card p-4 h-100">
+                    <h5 class="fw-semibold mb-3">
+                        <i class="bi bi-x-circle-fill text-danger"></i> Missing Skills
+                    </h5>
+                    <div>
+                        {% for skill in missing_skills %}
+                            <span class="badge bg-danger me-1 mb-2 fs-6 fw-normal p-2">
+                                {{ skill.skill_name }}
+                            </span>
+                        {% empty %}
+                            <p class="text-muted">No missing skills detected.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Feedback card -->
+        <div class="card p-4 mb-4">
+            <h5 class="fw-semibold mb-3">
+                <i class="bi bi-chat-text text-primary"></i> AI Feedback
+            </h5>
+            <p class="text-muted lh-lg">{{ analysis.feedback }}</p>
+        </div>
+
+        <!-- Suggestions card -->
+        <div class="card p-4 mb-4">
+            <h5 class="fw-semibold mb-3">
+                <i class="bi bi-lightbulb text-warning"></i> Improvement Suggestions
+            </h5>
+            <p class="text-muted lh-lg">{{ analysis.suggestions }}</p>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Helper function to create a donut chart
+    function createChart(canvasId, score) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+
+        // Pick color based on score
+        let color = '#dc3545'; // red for low
+        if (score >= 70) color = '#198754'; // green for high
+        else if (score >= 40) color = '#ffc107'; // yellow for medium
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [score, 100 - score],
+                    backgroundColor: [color, '#e9ecef'],
+                    borderWidth: 0,
+                }]
+            },
+            options: {
+                cutout: '75%',
+                plugins: { legend: { display: false } },
+                animation: { animateRotate: true, duration: 1000 }
+            }
+        });
+    }
+
+    // Create both charts using scores passed from Django view
+    createChart('matchChart', {{ analysis.match_score }});
+    createChart('atsChart', {{ analysis.ats_score }});
+</script>
+{% endblock %}

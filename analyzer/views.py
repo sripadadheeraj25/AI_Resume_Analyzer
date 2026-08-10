@@ -2,14 +2,13 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from .models import Resume, Analysis, SkillMatch
 import fitz  # this is PyMuPDF — the package name is fitz even though you pip installed PyMuPDF
-import google.generativeai as genai
+from google import genai
 import json
 import os
 
 
 # Configure Gemini API using your key from .env
-genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
-
+client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
 
 def home(request):
     # This view just shows the upload form
@@ -34,11 +33,6 @@ def extract_text_from_pdf(pdf_file):
 
 
 def analyze_with_gemini(resume_text, job_description):
-    # Create the Gemini model instance
-    model = genai.GenerativeModel('gemini-1.5-flash')
-
-    # This is the prompt — instructions we send to Gemini
-    # We tell it exactly what format to return so we can parse it reliably
     prompt = f"""
     You are an expert ATS (Applicant Tracking System) and resume analyzer.
     
@@ -61,25 +55,26 @@ def analyze_with_gemini(resume_text, job_description):
     }}
     """
 
-    # Send the prompt to Gemini and get response
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=prompt
+    )
 
-    # response.text contains Gemini's reply as a string
-    # We need to clean it — Gemini sometimes wraps JSON in ```json ``` markers
+    # Clean response in case Gemini wraps JSON in ```json ``` markers
     response_text = response.text.strip()
     if response_text.startswith('```json'):
-        response_text = response_text[7:]  # remove ```json from start
+        response_text = response_text[7:]
     if response_text.startswith('```'):
-        response_text = response_text[3:]  # remove ``` from start
+        response_text = response_text[3:]
     if response_text.endswith('```'):
-        response_text = response_text[:-3]  # remove ``` from end
+        response_text = response_text[:-3]
 
-    # Parse the cleaned string into a Python dictionary
     result = json.loads(response_text.strip())
     return result
 
 
 def analyze(request):
+    print("GEMINI KEY:", os.getenv('GEMINI_API_KEY'))
     # This view only accepts POST requests — form submissions
     # If someone visits /analyze/ directly in browser (GET), send them home
     if request.method != 'POST':
