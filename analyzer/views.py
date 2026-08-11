@@ -5,11 +5,18 @@ from groq import Groq
 import fitz  # PyMuPDF
 import json
 import os
+from supabase import create_client
+import uuid
 
 
 # Initialize Groq client using key from .env
 groq_client = Groq(api_key=os.getenv('GROQ_API_KEY'))
 
+# Initialize Supabase client
+supabase = create_client(
+    os.getenv('SUPABASE_URL'),
+    os.getenv('SUPABASE_KEY')
+)
 
 def home(request):
     # Simply renders the upload form
@@ -128,19 +135,40 @@ def analyze(request):
         messages.error(request, 'Could not extract text from this PDF. Make sure it is not a scanned image.')
         return redirect('home')
 
-    # Step 2 — Save Resume record to database
-    # file_url is empty for now — we will add Supabase storage later
+    # Step 2 — Upload PDF to Supabase Storage
+    # Generate a unique filename to avoid overwriting files with same name
+    # uuid4() generates a random unique ID every time
+    unique_filename = f"{uuid.uuid4()}_{resume_file.name}"
+
+    # Reset file pointer to beginning — PyMuPDF already read the file above
+    # Without this, we'd upload an empty file because the pointer is at the end
+    resume_file.seek(0)
+
+    # Read file bytes for upload
+    file_bytes = resume_file.read()
+
+    # Upload to Supabase Storage — 'resumes' is your bucket name
+    supabase.storage.from_('resumes').upload(
+        path=unique_filename,
+        file=file_bytes,
+        file_options={"content-type": "application/pdf"}
+    )
+
+    # Build the public URL for this file
+    # This URL never changes and can be accessed anytime
+    file_url = f"{os.getenv('SUPABASE_URL')}/storage/v1/object/public/resumes/{unique_filename}"
+
+    # Step 3 — Save Resume record to database
     resume = Resume.objects.create(
         file_name=resume_file.name,
-        file_url='',
+        file_url=file_url,
         extracted_text=resume_text
     )
 
-    # Step 3 — Send resume text and job description to Groq AI
+    # Step 4 — Send resume text and job description to Groq AI
     groq_result = analyze_with_groq(resume_text, job_description)
 
-    # Step 4 — Save Analysis record to database
-    # .get() with a default value prevents KeyError if AI misses a field
+    # Step 5 — Save Analysis record to database
     analysis = Analysis.objects.create(
         resume=resume,
         job_description=job_description,
@@ -150,7 +178,7 @@ def analyze(request):
         suggestions=groq_result.get('suggestions', '')
     )
 
-    # Step 5 — Save each matched skill as a SkillMatch row
+    # Step 6 — Save each matched skill
     for skill in groq_result.get('matched_skills', []):
         SkillMatch.objects.create(
             analysis=analysis,
@@ -158,7 +186,7 @@ def analyze(request):
             is_matched=True
         )
 
-    # Step 6 — Save each missing skill as a SkillMatch row
+    # Step 7 — Save each missing skill
     for skill in groq_result.get('missing_skills', []):
         SkillMatch.objects.create(
             analysis=analysis,
@@ -166,8 +194,7 @@ def analyze(request):
             is_matched=False
         )
 
-    # Step 7 — Render results page with all data
-    # analysis.skills.filter() works because of related_name='skills' in models.py
+    # Step 8 — Render results page
     return render(request, 'analyzer/result.html', {
         'analysis': analysis,
         'matched_skills': analysis.skills.filter(is_matched=True),
