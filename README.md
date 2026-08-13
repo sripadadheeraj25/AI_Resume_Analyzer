@@ -6,7 +6,7 @@ An AI-powered full-stack web application that analyzes resumes against job descr
 
 ## Live Demo
 
-🔗 [Live Demo](https://your-render-url.onrender.com) &nbsp;&nbsp; | &nbsp;&nbsp; [GitHub](https://github.com/sripadadheeraj/ai-resume-analyzer)
+🔗 [Live Demo](https://ai-resume-analyzer-gg43.onrender.com/) &nbsp;&nbsp; | &nbsp;&nbsp; [GitHub](https://github.com/sripadadheeraj25/AI_Resume_Analyzer)
 
 ---
 
