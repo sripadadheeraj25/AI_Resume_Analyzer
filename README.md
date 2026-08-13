@@ -173,12 +173,6 @@ Deployed on **Render** with:
 
 ---
 
-## Screenshots
-
-> Add screenshots of your home page and results page here
-
----
-
 ## Author
 
 **Sripada Dheeraj**
