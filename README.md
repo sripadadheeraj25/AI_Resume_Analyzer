@@ -176,6 +176,6 @@ Deployed on **Render** with:
 ## Author
 
 **Sripada Dheeraj**
-- GitHub: [@sripadadheeraj](https://github.com/sripadadheeraj)
+- GitHub: [@sripadadheeraj](https://github.com/sripadadheeraj25)
 - LinkedIn: [linkedin.com/in/sripadadheeraj](https://linkedin.com/in/sripadadheeraj)
 - Email: sripadadheeraj2025@gmail.com
