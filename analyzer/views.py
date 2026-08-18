@@ -70,7 +70,7 @@ def analyze_with_groq(resume_text, job_description):
     # messages= takes a list — system sets AI behavior, user is our actual request
     # temperature=0.3 means low randomness — gives consistent structured output
     response = groq_client.chat.completions.create(
-        model='llama-3.3-70b-versatile',
+        model='openai/gpt-oss-120b',
         messages=[
             {
                 'role': 'system',
